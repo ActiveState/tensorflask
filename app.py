@@ -27,10 +27,6 @@ import random
 import time
 
 from flask import Flask, jsonify, request
-from scipy.misc import imread, imresize
-
-import argparse
-import sys
 
 import numpy as np
 import tensorflow as tf
