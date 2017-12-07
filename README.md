@@ -13,7 +13,8 @@ Once you've started the service, you can query it on `localhost:8000`. You can e
 
 Will send the photo to the service, which will run the model and return JSON identifying the probabilties of each type of dog breed. In this case you'll get results like:
 
-`[
+```json
+[
   [
     "poodle", 
     "pug", 
@@ -24,7 +25,8 @@ Will send the photo to the service, which will run the model and return JSON ide
     1.1696176443365403e-05, 
     0.0004991634050384164
   ]
-]`
+]
+```
 
 And you can see that the model is 99% sure that the image is a poodle.
 
