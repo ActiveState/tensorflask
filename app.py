@@ -25,6 +25,8 @@ from __future__ import print_function
 import logging
 import random
 import time
+import json
+import os.path
 
 from flask import Flask, jsonify, request
 
@@ -37,7 +39,7 @@ def load_graph(model_file):
   graph = tf.Graph()
   graph_def = tf.GraphDef()
 
-  with open(model_file, "rb") as f:
+  with tf.gfile.GFile(model_file, "rb") as f:
     graph_def.ParseFromString(f.read())
   with graph.as_default():
     tf.import_graph_def(graph_def)
@@ -49,19 +51,10 @@ def read_tensor_from_image_file(file_name, input_height=299, input_width=299,
   input_name = "file_reader"
   output_name = "normalized"
   file_reader = tf.read_file(file_name, input_name)
-  if file_name.endswith(".png"):
-    image_reader = tf.image.decode_png(file_reader, channels = 3,
-                                       name='png_reader')
-  elif file_name.endswith(".gif"):
-    image_reader = tf.squeeze(tf.image.decode_gif(file_reader,
-                                                  name='gif_reader'))
-  elif file_name.endswith(".bmp"):
-    image_reader = tf.image.decode_bmp(file_reader, name='bmp_reader')
-  else:
-    image_reader = tf.image.decode_jpeg(file_reader, channels = 3,
-                                        name='jpeg_reader')
+  image_reader = tf.image.decode_image(file_reader, channels = 3,
+      name='image_reader')
   float_caster = tf.cast(image_reader, tf.float32)
-  dims_expander = tf.expand_dims(float_caster, 0);
+  dims_expander = tf.expand_dims(float_caster, 0)
   resized = tf.image.resize_bilinear(dims_expander, [input_height, input_width])
   normalized = tf.divide(tf.subtract(resized, [input_mean]), [input_std])
   sess = tf.Session()
@@ -99,8 +92,12 @@ def classify():
     print('\nEvaluation time (1-image): {:.3f}s\n'.format(end-start))
 
     for i in top_k:
-        print(labels[i], results[i])
-
+      print(labels[i], results[i])
+    
+    output_file = '{0}-output.txt'.format(os.path.splitext(file_name)[0])
+    print('Output results file: {0}'.format(output_file))
+    with open(output_file, 'w') as f:
+      json.dump([labels,results.tolist()], f, indent=1)
     return jsonify(labels,results.tolist())
 
 if __name__ == '__main__':
@@ -120,8 +117,8 @@ if __name__ == '__main__':
     # Grab the Input/Output operations
     input_name = "import/" + input_layer
     output_name = "import/" + output_layer
-    input_operation = graph.get_operation_by_name(input_name);
-    output_operation = graph.get_operation_by_name(output_name);
+    input_operation = graph.get_operation_by_name(input_name)
+    output_operation = graph.get_operation_by_name(output_name)
 
     # Initialize the Flask Service
     # Obviously, disable Debug in actual Production
