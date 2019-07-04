@@ -90,15 +90,20 @@ def classify():
         labels = load_labels(label_file)
 
     print('\nEvaluation time (1-image): {:.3f}s\n'.format(end-start))
-
-    for i in top_k:
-      print(labels[i], results[i])
     
-    output_file = '{0}-output.txt'.format(os.path.splitext(file_name)[0])
-    print('Output results file: {0}'.format(output_file))
+    # Build HTML output
+    html = '<h2>Tensorflask results:</h2>' 
+    for i in top_k:
+      print(labels[i], results[i]) # Output to console
+      html += '<p><b>{}</b> {:.4f}</p>'.format(labels[i], results[i])
+
+    # Write file output
+    output_file = '{}-output.txt'.format(os.path.splitext(file_name)[0])
+    print('Output results file: {}'.format(output_file))
     with open(output_file, 'w') as f:
       json.dump([labels,results.tolist()], f, indent=1)
-    return jsonify(labels,results.tolist())
+
+    return html
 
 if __name__ == '__main__':
     # TensorFlow configuration/initialization
